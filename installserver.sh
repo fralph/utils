@@ -10,3 +10,9 @@ apt-get install php7.0-soap
 apt-get install php7.0-mbstring
 apt-get install mariadb-server
 apt-get install git
+apt-get install ghostscript
+cd /usr/lib/x86_64-linux-gnu
+ln -s libgs.so.9 libgs.so
+add-apt-repository ppa:webupd8team/java
+apt-get update
+apt-get install oracle-java8-installer
