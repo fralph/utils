@@ -57,8 +57,8 @@ function createdatabase {
 
 function createmoodledata {
   echo "Creating moodledata $NAME"
-  mkdir /opt/data/$NAME
-  chown -R www-data:www-data /opt/data/$NAME
+  mkdir /opt/moodle/mdata/$NAME
+  chown -R www-data:www-data /opt/moodle/mdata/$NAME
 }
 
 function createnginxsite {
@@ -80,6 +80,7 @@ function createnginxsite {
         ' /etc/nginx/sites-available/default > /etc/nginx/sites-available/$NAME
   sed -i -- "s/try_files \$uri \$uri\/ =404/try_files \$uri \$uri\/index.php/" /etc/nginx/sites-available/$NAME
   sed -i -- "s/listen 80 default_server/listen 80/" /etc/nginx/sites-available/$NAME
+  sed -i -- "s/listen [::]:80 default_server/listen [::]:80/" /etc/nginx/sites-available/$NAME
   sed -i -- "s/root \/var\/www\/html/root \/opt\/moodle\/mt\/$NAME/" /etc/nginx/sites-available/$NAME
   sed -i -- "s/server_name _/server_name $URL/" /etc/nginx/sites-available/$NAME
   ln -s /etc/nginx/sites-available/$NAME /etc/nginx/sites-enabled/$NAME
@@ -94,11 +95,15 @@ function createmoodleconfig {
   sed -i -- "s/'moodle'/'$NAME'/" /opt/moodle/mt/$NAME/config.php
   sed -i -- "s/'password'/'$PASSWORD'/" /opt/moodle/mt/$NAME/config.php
   sed -i -- "s/'http:\/\/example.com\/moodle'/'http:\/\/$URL'/" /opt/moodle/mt/$NAME/config.php
-  sed -i -- "s/'\/home\/example\/moodledata'/'\/opt\/data\/$NAME'/" /opt/moodle/mt/$NAME/config.php
+  sed -i -- "s/'\/home\/example\/moodledata'/'\/opt\/moodle\/mdata\/$NAME'/" /opt/moodle/mt/$NAME/config.php
 }
 
 function runmoodleinstallfirst {
   echo "Installing moodle $NAME"
   cd /opt/moodle/mt/$NAME/admin/cli
   sudo -u www-data /usr/bin/php install_database.php --agree-license --adminemail=soporte@edocere.com --fullname=$NAME --shortname=$NAME --adminpass=$PASSWORD
+}
+
+function usage {
+  echo "Usage: createsite.sh -n moodle -p pepito -u www.webclass.com"
 }
