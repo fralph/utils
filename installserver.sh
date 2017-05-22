@@ -1,4 +1,5 @@
 #!/bin/bash
+apt-get install nginx
 apt-get install php7.0-fpm
 apt-get install php7.0-gd
 apt-get install php7.0-xm
