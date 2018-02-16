@@ -1,0 +1,28 @@
+#!/bin/bash
+
+echo "Nombre corto:$1"
+echo "Nombre largo:$2"
+
+cd /moodle/mt/
+cp -rf edocere $1
+sed -i -- 's/site/'"$1"'/g' /moodle/mt/$1/config.php
+mysql -u root --password=D0cendus.P0 -e "CREATE DATABASE IF NOT EXISTS $1 DEFAULT CHARACTER SET= 'UTF8' collate 'utf8_unicode_ci'"
+mysql -u root --password=D0cendus.P0 -e "grant all privileges on $1.* to $1@'%' identified by 'pepito.P0'"
+mysql -u root --password=D0cendus.P0 -e "flush privileges"
+mkdir -p /moodle/data/$1
+chown www-data:www-data /moodle/data/$1
+cp /moodle/apache/aliases/site.conf /moodle/apache/aliases/$1.conf
+sed -i -- 's/site/'"$1"'/g' /moodle/apache/aliases/$1.conf
+sed -i '47i Include /moodle/apache/aliases/'"$1"'.conf' /etc/apache2/sites-available/000-default.conf
+service apache2 restart
+cd /moodle/mt/$1/admin/cli/
+sudo -u www-data /usr/bin/php install_database.php --lang=es --adminpass=D0cendus.P0 --agree-license --fullname="$2" --shortname=$1 --adminemail=soporte@edocere.com
+mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = 'tls' where name = 'smtpsecure';"
+mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = 'email-smtp.us-east-1.amazonaws.com' where name = 'smtphosts';"
+mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = 'AKIAINACNIOFNS32HETQ' where name = 'smtpuser';"
+mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = 'Ar/0WTH1a0m+VzO0a8QDoYPSFA411U+Aw3K0DokcIB68' where name = 'smtppass';"
+mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = '0' where name = 'autolang';"
+mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = '0' where name = 'langmenu';"
+mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = 'es_CL.utf8' where name = 'locale';"
+mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config_plugins set value = '.helplink, .sitelink {display:none;}' where name = 'customcss' and plugin = 'theme_clean';"
+exit 0
