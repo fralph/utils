@@ -1,0 +1,10 @@
+#!/bin/bash
+
+for i in $(ls /moodle/mt/);
+do
+	#echo ${i%%/};
+	echo "Actualizando SMTP de $i"
+	mysql -u root --password=D0cendus.P0 -e "update $i.mdl_config set value = 'smtp-relay.sendinblue.com:587' where name = 'smtphosts';"
+	mysql -u root --password=D0cendus.P0 -e "update $i.mdl_config set value = 'jorge.villalon@edocere.com' where name = 'smtpuser';"
+	mysql -u root --password=D0cendus.P0 -e "update $i.mdl_config set value = 'prkIchR0SVT1vEy8' where name = 'smtppass';"
+done
