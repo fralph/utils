@@ -4,7 +4,9 @@ echo "Nombre corto:$1"
 echo "Nombre largo:$2"
 
 cd /moodle/mt/
-cp -rf edocere $1
+mkdir -p /moodle/mt/$1
+cp -rf /moodle/mt/edocere/* /moodle/mt/$1/
+cp -f /moodle/mt/$1/config-dist.php /moodle/mt/$1/config.php
 sed -i -- 's/site/'"$1"'/g' /moodle/mt/$1/config.php
 mysql -u root --password=D0cendus.P0 -e "CREATE DATABASE IF NOT EXISTS $1 DEFAULT CHARACTER SET= 'UTF8' collate 'utf8_unicode_ci'"
 mysql -u root --password=D0cendus.P0 -e "grant all privileges on $1.* to $1@'%' identified by 'pepito.P0'"
