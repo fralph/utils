@@ -1,24 +1,53 @@
 #!/bin/bash
 
+if [ "$#" -lt 2 ]; then
+    echo "Uso: ./moodle nombre_corto \"Nombre largo\" <url.edocere.com>"
+    exit 1
+fi
+
 echo "Nombre corto:$1"
 echo "Nombre largo:$2"
 
+if [ "$#" -eq 3 ]; then
+	echo "URL: $3"
+else
+	echo "No usaremos URL"
+fi
+
+exit 0
+echo "Creando directorio y copiando base"
 cd /moodle/mt/
-mkdir -p /moodle/mt/$1
-cp -rf /moodle/mt/edocere/* /moodle/mt/$1/
-cp -f /moodle/mt/$1/config-dist.php /moodle/mt/$1/config.php
-sed -i -- 's/site/'"$1"'/g' /moodle/mt/$1/config.php
-mysql -u root --password=D0cendus.P0 -e "CREATE DATABASE IF NOT EXISTS $1 DEFAULT CHARACTER SET= 'UTF8' collate 'utf8_unicode_ci'"
+cp -rf ../moodle3.4.2 $1
+echo "Modificando archivo config.php"
+if [ "$#" -eq 3 ]; then
+	cp /moodle/mt/$1/config-site.php /moodle/mt/$1/config.php
+	sed -i -- 's/site/'"$1"'/g' /moodle/mt/$1/config.php
+	sed -i -- 's/urlmoodle/'"$3"'/g' /moodle/mt/$1/config.php
+else
+	sed -i -- 's/site/'"$1"'/g' /moodle/mt/$1/config.php
+fi
+echo "Creando BBDD y usuario BBDD"
+mysql -u root --password=D0cendus.P0 -e "CREATE DATABASE IF NOT EXISTS $1 DEFAULT CHARACTER SET=utf8mb4 COLLATE 'utf8mb4_unicode_ci'"
 mysql -u root --password=D0cendus.P0 -e "grant all privileges on $1.* to $1@'%' identified by 'pepito.P0'"
 mysql -u root --password=D0cendus.P0 -e "flush privileges"
+echo "Creando directorio de datos (moodledata)"
 mkdir -p /moodle/data/$1
 chown www-data:www-data /moodle/data/$1
-cp /moodle/apache/aliases/site.conf /moodle/apache/aliases/$1.conf
-sed -i -- 's/site/'"$1"'/g' /moodle/apache/aliases/$1.conf
-sed -i '47i Include /moodle/apache/aliases/'"$1"'.conf' /etc/apache2/sites-available/000-default.conf
-service apache2 restart
+echo "Creando sitio en nginx"
+if [ "$#" -eq 3 ]; then
+	cp /moodle/nginx/site-url /etc/nginx/sites-available/$1
+	sed -i -- 's/site/'"$1"'/g' /etc/nginx/sites-available/$1
+	sed -i -- 's/urlmoodle/'"$3"'/g' /etc/nginx/sites-available/$1
+else
+	cp /moodle/nginx/site /etc/nginx/sites-available/$1
+	sed -i -- 's/site/'"$1"'/g' /etc/nginx/sites-available/$1
+fi
+ln -s /etc/nginx/sites-available/$1 /etc/nginx/sites-enabled/
+systemctl restart nginx
+echo "Instalando Moodle"
 cd /moodle/mt/$1/admin/cli/
 sudo -u www-data /usr/bin/php install_database.php --lang=es --adminpass=D0cendus.P0 --agree-license --fullname="$2" --shortname=$1 --adminemail=soporte@edocere.com
+echo "Creando configuraciones básicas"
 mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = 'tls' where name = 'smtpsecure';"
 mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = 'email-smtp.us-east-1.amazonaws.com' where name = 'smtphosts';"
 mysql -u root --password=D0cendus.P0 -e "update $1.mdl_config set value = 'AKIAINACNIOFNS32HETQ' where name = 'smtpuser';"
